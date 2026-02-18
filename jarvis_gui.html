@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S — Iron Man AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --arc:#00d4ff; --arc2:#006688; --arc-g:rgba(0,212,255,0.3);
+  --gold:#ffc940; --red:#ff3d3d; --grn:#00ff88;
+  --bg:#010d18; --panel:rgba(1,16,30,0.93); --border:rgba(0,212,255,0.15);
+  --text:#7ec8dc; --white:#e0f8ff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;cursor:crosshair;}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(rgba(0,212,255,.02) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(0,212,255,.02) 1px,transparent 1px);
+  background-size:40px 40px; animation:grid 30s linear infinite;}
+@keyframes grid{to{background-position:40px 40px;}}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);}
+
+#root{position:relative;z-index:2;height:100vh;display:flex;flex-direction:column;}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 22px;border-bottom:1px solid var(--border);flex-shrink:0;
+  background:linear-gradient(180deg,rgba(0,25,45,.98),rgba(0,10,20,.6));}
+header::after{content:'';position:absolute;top:100%;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--arc),transparent);
+  animation:hl 3s ease-in-out infinite;}
+@keyframes hl{0%,100%{opacity:.25;}50%{opacity:1;}}
+.logo{font-family:'Orbitron',sans-serif;font-size:19px;font-weight:900;letter-spacing:7px;
+  color:var(--arc);text-shadow:0 0 20px var(--arc-g);}
+.logo b{color:var(--gold);font-weight:900;}
+.hc{display:flex;gap:12px;align-items:center;font-size:10px;color:var(--arc2);}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--arc);box-shadow:0 0 7px var(--arc);animation:dp 1.5s ease-in-out infinite;}
+@keyframes dp{0%,100%{opacity:1;}50%{opacity:.2;}}
+.sep{opacity:.2;}
+#clk{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--arc);letter-spacing:2px;}
+
+/* ── NAV ── */
+.nav{display:flex;background:rgba(0,10,20,.9);border-bottom:1px solid var(--border);flex-shrink:0;padding:0 14px;gap:1px;}
+.tab{padding:9px 14px;background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--arc2);font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;
+  cursor:pointer;transition:all .22s;white-space:nowrap;}
+.tab:hover{color:var(--arc);}
+.tab.on{color:var(--arc);border-bottom-color:var(--arc);text-shadow:0 0 10px var(--arc-g);}
+
+/* ── PAGES ── */
+.pg{display:none;flex:1;min-height:0;overflow:hidden;}
+.pg.on{display:flex;}
+
+/* ── PANEL ── */
+.pnl{background:var(--panel);border:1px solid var(--border);border-radius:4px;position:relative;overflow:hidden;backdrop-filter:blur(12px);}
+.pnl::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--arc),transparent);}
+.ph{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:3px;color:var(--arc2);
+  padding:7px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-shrink:0;text-transform:uppercase;}
+.ph::before{content:'▶';color:var(--arc);font-size:6px;}
+
+/* ══════════════════════════════════════
+   PAGE 1 — DASHBOARD
+══════════════════════════════════════ */
+#pg-dash{gap:8px;padding:8px;display:grid;
+  grid-template-columns:195px 1fr 195px;
+  grid-template-rows:1fr 1fr;}
+
+/* Arc Reactor */
+.arc-pnl{grid-row:1/3;display:flex;flex-direction:column;}
+.rw{padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.reactor{width:92px;height:92px;position:relative;display:flex;align-items:center;justify-content:center;}
+.reactor svg{position:absolute;inset:0;}
+.ro{animation:rs 9s linear infinite;}
+.ri{animation:rs 6s linear infinite reverse;}
+@keyframes rs{to{transform:rotate(360deg);}}
+.rcore{width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,var(--arc) 38%,rgba(0,212,255,.1) 65%,transparent 100%);
+  box-shadow:0 0 14px var(--arc),0 0 30px var(--arc-g);animation:rp 2s ease-in-out infinite;}
+@keyframes rp{0%,100%{box-shadow:0 0 14px var(--arc),0 0 28px var(--arc-g);}50%{box-shadow:0 0 24px var(--arc),0 0 48px var(--arc-g),0 0 70px rgba(0,212,255,.15);}}
+.rlbl{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:4px;color:var(--arc);text-shadow:0 0 8px var(--arc-g);}
+.stats{padding:0 11px 10px;display:flex;flex-direction:column;gap:7px;}
+.si{display:flex;flex-direction:column;gap:3px;}
+.sl{font-size:9px;color:var(--arc2);display:flex;justify-content:space-between;}
+.sl span{color:var(--arc);}
+.sb{height:2px;background:rgba(0,212,255,.08);border-radius:2px;overflow:hidden;}
+.sf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--arc2),var(--arc));
+  box-shadow:0 0 5px var(--arc-g);transition:width 1.3s ease;}
+.slog{padding:0 11px 10px;font-size:9px;line-height:2;color:var(--arc2);}
+.ok{color:var(--grn);} .wd{color:var(--gold);}
+
+/* Chat */
+.chat-pnl{grid-row:1/3;display:flex;flex-direction:column;min-height:0;}
+.msgs{flex:1;padding:9px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--arc2) transparent;}
+.msg{display:flex;gap:7px;align-items:flex-start;animation:mi .3s ease;}
+@keyframes mi{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.msg.u{flex-direction:row-reverse;}
+.av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:8px;flex-shrink:0;border:1px solid var(--border);}
+.j .av{background:rgba(0,212,255,.1);color:var(--arc);border-color:rgba(0,212,255,.35);}
+.u .av{background:rgba(255,201,64,.1);color:var(--gold);border-color:rgba(255,201,64,.35);}
+.bb{padding:6px 10px;border-radius:3px;font-size:11px;line-height:1.55;max-width:82%;}
+.j .bb{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);color:var(--white);}
+.u .bb{background:rgba(255,201,64,.05);border:1px solid rgba(255,201,64,.12);color:var(--white);}
+.mt{font-size:9px;color:var(--arc2);margin-top:2px;}
+.typ{display:none;padding:3px 9px;}
+.typ.on{display:flex;gap:7px;align-items:center;}
+.td{width:5px;height:5px;border-radius:50%;background:var(--arc);animation:tb 1.2s ease-in-out infinite;}
+.td:nth-child(2){animation-delay:.2s;}.td:nth-child(3){animation-delay:.4s;}
+@keyframes tb{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+.chin{display:flex;gap:5px;padding:7px 9px;border-top:1px solid var(--border);flex-shrink:0;}
+#ci{flex:1;background:rgba(0,18,34,.8);border:1px solid var(--border);border-radius:3px;
+  padding:8px 10px;color:var(--white);font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;}
+#ci:focus{border-color:var(--arc);box-shadow:0 0 8px var(--arc-g);}
+#ci::placeholder{color:var(--arc2);}
+.ib{width:32px;height:32px;background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--arc);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.ib:hover{background:rgba(0,212,255,.1);border-color:var(--arc);}
+.ib.mic{color:var(--gold);border-color:rgba(255,201,64,.3);}
+.ib.mic.on{color:var(--red);border-color:var(--red);background:rgba(255,61,61,.1);animation:mp .9s infinite;}
+@keyframes mp{0%,100%{box-shadow:0 0 8px rgba(255,61,61,.3);}50%{box-shadow:0 0 18px rgba(255,61,61,.6);}}
+
+/* Right panel */
+.rp{grid-row:1/3;display:flex;flex-direction:column;gap:8px;}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px;}
+.cb{padding:7px 4px;background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;
+  text-align:center;line-height:1.4;transition:all .2s;position:relative;overflow:hidden;}
+.cb::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 50%,rgba(0,212,255,.04));opacity:0;transition:.2s;}
+.cb:hover{border-color:var(--arc);color:var(--arc);box-shadow:0 0 8px var(--arc-g);}
+.cb:hover::after{opacity:1;}
+.cb:active{transform:scale(.94);}
+.ci2{font-size:15px;display:block;margin-bottom:2px;}
+.alog{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:3px;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--arc2) transparent;}
+.le{font-size:9px;padding:3px 7px;border-left:2px solid var(--border);color:var(--arc2);animation:li .2s ease;}
+@keyframes li{from{opacity:0;transform:translateX(5px);}to{opacity:1;transform:translateX(0);}}
+.le.info{border-color:var(--arc);}.le.ok2{border-color:var(--grn);color:#00bb66;}
+.le.warn{border-color:var(--gold);color:var(--gold);}.le.err{border-color:var(--red);color:var(--red);}
+.lt{opacity:.45;margin-right:4px;}
+
+/* ══════════════════════════════════════
+   PAGE 2 — CAMERA
+══════════════════════════════════════ */
+#pg-cam{flex-direction:column;padding:10px;gap:8px;}
+.cam-wrap{flex:1;position:relative;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:#000;min-height:0;}
+#camFeed{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none;}
+.co{position:absolute;inset:0;pointer-events:none;}
+.co::before,.co::after{content:'';position:absolute;width:28px;height:28px;border-color:var(--arc);border-style:solid;box-shadow:0 0 8px var(--arc-g);}
+.co::before{top:10px;left:10px;border-width:2px 0 0 2px;}
+.co::after{bottom:10px;right:10px;border-width:0 2px 2px 0;}
+.scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--arc),transparent);opacity:.5;animation:sc 3.5s ease-in-out infinite;}
+@keyframes sc{0%{top:0;opacity:0;}10%{opacity:.7;}90%{opacity:.7;}100%{top:100%;opacity:0;}}
+.xh{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;pointer-events:none;animation:xhp 2s ease-in-out infinite;}
+@keyframes xhp{0%,100%{opacity:.3;}50%{opacity:.8;}}
+.xh::before,.xh::after{content:'';position:absolute;background:rgba(0,212,255,.65);}
+.xh::before{width:100%;height:1px;top:50%;}.xh::after{width:1px;height:100%;left:50%;}
+.ch{position:absolute;font-family:'Orbitron',sans-serif;font-size:9px;color:var(--arc);text-shadow:0 0 5px var(--arc);}
+.ch.tl{top:14px;left:44px;}.ch.tr{top:14px;right:12px;}.ch.bl{bottom:12px;left:12px;}.ch.br{bottom:12px;right:12px;}
+.nocam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:var(--arc2);}
+.nocam-icon{font-size:48px;opacity:.15;filter:grayscale(1);}
+.cam-btns{display:flex;gap:7px;flex-shrink:0;}
+.camb{flex:1;padding:9px;background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--arc);font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.camb:hover{background:rgba(0,212,255,.1);border-color:var(--arc);box-shadow:0 0 9px var(--arc-g);}
+.camb.on{background:rgba(0,212,255,.1);border-color:var(--arc);}
+.camb.d{color:var(--red);border-color:rgba(255,61,61,.3);}
+.camb.d:hover{background:rgba(255,61,61,.1);border-color:var(--red);}
+
+/* ══════════════════════════════════════
+   PAGE 3 — SEARCH  (opens in NEW TAB)
+══════════════════════════════════════ */
+#pg-search{flex-direction:column;padding:10px;gap:10px;}
+.s-top{display:flex;gap:7px;align-items:stretch;}
+#sinput{flex:1;background:rgba(0,18,34,.85);border:1px solid var(--border);border-radius:4px;
+  padding:11px 15px;color:var(--white);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;
+  transition:border-color .2s;}
+#sinput:focus{border-color:var(--arc);box-shadow:0 0 12px var(--arc-g);}
+#sinput::placeholder{color:var(--arc2);}
+.stabs{display:flex;gap:5px;flex-wrap:wrap;}
+.stab{padding:7px 13px;background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--arc2);font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.stab:hover,.stab.on{background:rgba(0,212,255,.1);border-color:var(--arc);color:var(--arc);box-shadow:0 0 8px var(--arc-g);}
+.stab.yt{color:#ff5555;border-color:rgba(255,80,80,.25);}
+.stab.yt:hover,.stab.yt.on{background:rgba(255,60,60,.12);border-color:#ff4444;color:#ff4444;box-shadow:0 0 8px rgba(255,60,60,.3);}
+.sbtn{padding:11px 20px;background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(0,212,255,.06));
+  border:1px solid var(--arc);border-radius:4px;color:var(--arc);
+  font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.sbtn:hover{background:rgba(0,212,255,.2);box-shadow:0 0 14px var(--arc-g);}
+.sbtn:active{transform:scale(.97);}
+
+/* Search grid — quick links */
+.s-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:1;}
+.s-cat{display:flex;flex-direction:column;gap:7px;}
+.s-cat-title{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:3px;color:var(--arc2);
+  padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.s-cat-title::before{content:'▶';color:var(--arc);font-size:6px;}
+.s-links{display:flex;flex-direction:column;gap:4px;padding:7px;}
+.slink{display:flex;align-items:center;gap:8px;padding:9px 11px;background:transparent;
+  border:1px solid var(--border);border-radius:3px;color:var(--text);cursor:pointer;
+  font-size:11px;transition:all .2s;text-align:left;width:100%;}
+.slink:hover{border-color:var(--arc);color:var(--arc);background:rgba(0,212,255,.06);box-shadow:0 0 8px var(--arc-g);}
+.slink:active{transform:scale(.98);}
+.slink-icon{font-size:16px;flex-shrink:0;}
+.slink-info{display:flex;flex-direction:column;gap:1px;}
+.slink-name{font-size:11px;font-weight:bold;}
+.slink-desc{font-size:9px;opacity:.5;}
+.slink.yt{color:#ff6666;}
+.slink.yt:hover{border-color:#ff4444;color:#ff4444;background:rgba(255,60,60,.07);box-shadow:0 0 8px rgba(255,60,60,.25);}
+.s-search-info{grid-column:1/-1;display:flex;align-items:center;gap:8px;
+  padding:10px 14px;background:rgba(0,212,255,.04);border:1px solid var(--border);border-radius:4px;
+  font-size:10px;color:var(--arc2);}
+.s-search-info .icon{font-size:18px;opacity:.6;}
+
+/* ══════════════════════════════════════
+   PAGE 4 — CALCULATOR
+══════════════════════════════════════ */
+#pg-calc{justify-content:center;align-items:center;padding:16px;gap:16px;}
+.calc{width:290px;}
+.cd{background:rgba(0,8,18,.95);border:1px solid var(--border);border-radius:4px 4px 0 0;padding:14px 16px;text-align:right;}
+.cexpr{font-size:10px;color:var(--arc2);min-height:14px;word-break:break-all;transition:all .2s;}
+.cval{font-family:'Orbitron',sans-serif;font-size:30px;color:var(--arc);
+  text-shadow:0 0 10px var(--arc-g);word-break:break-all;margin-top:4px;transition:all .15s;}
+.ck-g{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  background:rgba(0,8,18,.7);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;padding:6px;}
+.ck{padding:14px;background:rgba(0,20,40,.7);border:1px solid var(--border);border-radius:3px;
+  color:var(--white);font-family:'Orbitron',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .14s;}
+.ck:hover{background:rgba(0,212,255,.13);border-color:var(--arc);color:var(--arc);}
+.ck:active{transform:scale(.92);background:rgba(0,212,255,.2);}
+.ck.op{color:var(--gold);}
+.ck.eq{background:rgba(0,212,255,.15);color:var(--arc);border-color:rgba(0,212,255,.4);}
+.ck.eq:hover{background:rgba(0,212,255,.25);}
+.ck.cl{color:var(--red);}
+.ck.w2{grid-column:span 2;}
+.c-hist{width:220px;align-self:stretch;display:flex;flex-direction:column;max-height:400px;}
+.chl{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:3px;
+  scrollbar-width:thin;scrollbar-color:var(--arc2) transparent;}
+.chi{font-size:10px;padding:5px 8px;border-left:2px solid rgba(0,212,255,.3);color:var(--arc2);cursor:pointer;transition:all .15s;}
+.chi:hover{border-color:var(--arc);color:var(--arc);background:rgba(0,212,255,.05);}
+
+/* ══════════════════════════════════════
+   PAGE 5 — NOTES
+══════════════════════════════════════ */
+#pg-notes{padding:10px;gap:10px;}
+.nl-p{width:200px;flex-shrink:0;display:flex;flex-direction:column;}
+.nlist{flex:1;overflow-y:auto;padding:5px;display:flex;flex-direction:column;gap:3px;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--arc2) transparent;}
+.ni{padding:8px 10px;border:1px solid var(--border);border-radius:3px;cursor:pointer;
+  transition:all .2s;font-size:10px;color:var(--text);}
+.ni:hover,.ni.on{border-color:var(--arc);color:var(--arc);background:rgba(0,212,255,.05);}
+.ni-t{font-size:11px;font-family:'Orbitron',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ni-p{font-size:9px;opacity:.45;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ne{flex:1;display:flex;flex-direction:column;min-height:0;}
+#ntitle{flex-shrink:0;background:rgba(0,18,34,.85);border:1px solid var(--border);border-bottom:none;
+  border-radius:4px 4px 0 0;padding:10px 13px;color:var(--white);
+  font-family:'Orbitron',sans-serif;font-size:13px;outline:none;}
+#ntitle:focus{border-color:var(--arc);}
+#ntitle::placeholder{color:var(--arc2);}
+#nbody{flex:1;background:rgba(0,14,28,.8);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 4px 4px;padding:12px;color:var(--white);
+  font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;resize:none;line-height:1.75;min-height:0;}
+#nbody:focus{border-color:var(--arc);}
+#nbody::placeholder{color:var(--arc2);}
+.nbtns{display:flex;gap:6px;padding-top:7px;flex-shrink:0;}
+.nb{flex:1;padding:8px;background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--arc);font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.nb:hover{background:rgba(0,212,255,.1);border-color:var(--arc);}
+.nb.d{color:var(--red);border-color:rgba(255,61,61,.3);}
+.nb.d:hover{background:rgba(255,61,61,.1);border-color:var(--red);}
+
+/* ══════════════════════════════════════
+   PAGE 6 — WEATHER
+══════════════════════════════════════ */
+#pg-weather{flex-direction:column;padding:10px;gap:10px;}
+.ws{display:flex;gap:8px;}
+#winput{flex:1;background:rgba(0,18,34,.85);border:1px solid var(--border);border-radius:4px;
+  padding:10px 14px;color:var(--white);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;}
+#winput:focus{border-color:var(--arc);box-shadow:0 0 10px var(--arc-g);}
+#winput::placeholder{color:var(--arc2);}
+.wb{padding:10px 20px;background:transparent;border:1px solid var(--arc);border-radius:4px;
+  color:var(--arc);font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.wb:hover{background:rgba(0,212,255,.13);box-shadow:0 0 10px var(--arc-g);}
+.wcard{flex:1;display:flex;gap:10px;min-height:0;}
+.wm{flex:1;display:flex;flex-direction:column;gap:10px;}
+.wbig{display:flex;align-items:center;justify-content:center;gap:24px;flex:1;
+  border:1px solid var(--border);border-radius:4px;background:rgba(0,12,24,.6);
+  padding:20px;position:relative;overflow:hidden;}
+.wbig::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,212,255,.04),transparent 70%);}
+.w-icon{font-size:72px;filter:drop-shadow(0 0 14px rgba(0,212,255,.25));}
+.winfo{display:flex;flex-direction:column;gap:6px;}
+.wcity{font-family:'Orbitron',sans-serif;font-size:16px;color:var(--arc);letter-spacing:3px;}
+.wtemp{font-family:'Orbitron',sans-serif;font-size:52px;color:var(--white);line-height:1;text-shadow:0 0 20px var(--arc-g);}
+.wdesc{font-size:11px;color:var(--text);letter-spacing:3px;text-transform:uppercase;}
+.wdet{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex-shrink:0;}
+.wdi{border:1px solid var(--border);border-radius:4px;padding:11px;
+  display:flex;flex-direction:column;gap:4px;background:rgba(0,12,24,.6);}
+.wdl{font-size:8px;letter-spacing:2px;color:var(--arc2);}
+.wdv{font-family:'Orbitron',sans-serif;font-size:18px;color:var(--arc);}
+.wph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;color:var(--arc2);font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;border:1px solid var(--border);border-radius:4px;}
+
+/* ══════════════════════════════════════
+   STATUS BAR
+══════════════════════════════════════ */
+.sbar{display:flex;align-items:center;gap:12px;padding:5px 16px;
+  border-top:1px solid var(--border);background:rgba(0,8,18,.9);flex-shrink:0;font-size:10px;}
+.wave{display:flex;align-items:center;gap:2px;height:14px;}
+.wv{width:3px;border-radius:2px;background:var(--arc);opacity:.18;animation:wva 1s ease-in-out infinite;}
+.wv.on{opacity:1;}
+.wv:nth-child(1){height:4px;}.wv:nth-child(2){height:10px;animation-delay:.1s;}
+.wv:nth-child(3){height:14px;animation-delay:.2s;}.wv:nth-child(4){height:8px;animation-delay:.3s;}
+.wv:nth-child(5){height:12px;animation-delay:.1s;}.wv:nth-child(6){height:5px;animation-delay:.2s;}
+@keyframes wva{0%,100%{transform:scaleY(.3);}50%{transform:scaleY(1);}}
+.s-sep{opacity:.2;}
+#vst{transition:color .3s;}
+.pwr{margin-left:auto;padding:5px 14px;background:transparent;border:1px solid rgba(255,61,61,.35);
+  border-radius:3px;color:var(--red);font-family:'Orbitron',sans-serif;font-size:8px;
+  letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.pwr:hover{background:rgba(255,61,61,.1);box-shadow:0 0 10px rgba(255,61,61,.25);}
+
+/* ══════════════════════════════════════
+   BOOT SCREEN
+══════════════════════════════════════ */
+#boot{position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+.bl{font-family:'Orbitron',sans-serif;font-size:52px;font-weight:900;
+  color:var(--arc);text-shadow:0 0 30px var(--arc),0 0 60px var(--arc-g);letter-spacing:16px;
+  animation:blp 1s ease-in-out infinite alternate;}
+@keyframes blp{from{opacity:.55;}to{opacity:1;}}
+.bsub{font-size:10px;letter-spacing:6px;color:var(--arc2);}
+.bpb{width:280px;height:2px;background:rgba(0,212,255,.08);border-radius:2px;overflow:hidden;margin-top:6px;}
+.bpf{height:100%;background:linear-gradient(90deg,var(--arc2),var(--arc));box-shadow:0 0 8px var(--arc);width:0%;transition:width .1s;}
+.btx{font-size:10px;color:var(--arc2);height:14px;letter-spacing:1px;}
+
+/* TOAST */
+#toast{position:fixed;top:18px;right:18px;padding:9px 16px;
+  background:rgba(0,20,40,.97);border:1px solid var(--arc);border-radius:4px;
+  color:var(--white);font-size:11px;z-index:500;box-shadow:0 0 18px var(--arc-g);
+  transform:translateX(130%);transition:transform .3s ease;max-width:280px;}
+#toast.on{transform:translateX(0);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--arc2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- BOOT -->
+<div id="boot">
+  <div class="bl">J.A.R.V.I.S</div>
+  <div class="bsub">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+  <div class="bpb"><div class="bpf" id="bpf"></div></div>
+  <div class="btx" id="btx">INITIALIZING...</div>
+</div>
+<div id="toast"></div>
+
+<div id="root">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">J.A.R.V.I.S <b>◈</b></div>
+    <div class="hc">
+      <div class="dot"></div><span>ALL SYSTEMS ONLINE</span>
+      <span class="sep">|</span><span>STARK INDUSTRIES v4.2</span>
+      <span class="sep">|</span><span>MARK XLVII</span>
+    </div>
+    <div id="clk">00:00:00</div>
+  </header>
+
+  <!-- NAV TABS -->
+  <div class="nav">
+    <button class="tab on"  onclick="goPage('dash',this)">⬡ DASHBOARD</button>
+    <button class="tab"     onclick="goPage('cam',this)">◎ CAMERA</button>
+    <button class="tab"     onclick="goPage('search',this)">⊕ SEARCH</button>
+    <button class="tab"     onclick="goPage('calc',this)">⊞ CALCULATOR</button>
+    <button class="tab"     onclick="goPage('notes',this)">◧ NOTES</button>
+    <button class="tab"     onclick="goPage('weather',this)">🌡 WEATHER</button>
+  </div>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="pg on" id="pg-dash">
+
+    <!-- Arc Reactor -->
+    <div class="pnl arc-pnl">
+      <div class="ph">ARC REACTOR CORE</div>
+      <div class="rw">
+        <div class="reactor">
+          <svg class="ro" viewBox="0 0 92 92" width="92" height="92">
+            <circle cx="46" cy="46" r="42" fill="none" stroke="rgba(0,212,255,.1)" stroke-width="1"/>
+            <circle cx="46" cy="46" r="42" fill="none" stroke="url(#rg)" stroke-width="2" stroke-dasharray="7 5" stroke-linecap="round"/>
+            <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="rgba(0,212,255,0)"/>
+              <stop offset="50%" stop-color="#00d4ff"/>
+              <stop offset="100%" stop-color="rgba(0,212,255,0)"/>
+            </linearGradient></defs>
+          </svg>
+          <svg class="ri" viewBox="0 0 92 92" width="64" height="64">
+            <circle cx="46" cy="46" r="40" fill="none" stroke="rgba(0,212,255,.4)" stroke-width="1.5" stroke-dasharray="3 8"/>
+          </svg>
+          <div class="rcore"></div>
+        </div>
+        <div class="rlbl">POWER: ONLINE</div>
+      </div>
+      <div class="stats">
+        <div class="si"><div class="sl">POWER <span id="pv">94%</span></div><div class="sb"><div class="sf" id="pb" style="width:94%"></div></div></div>
+        <div class="si"><div class="sl">CPU <span id="cv">67%</span></div><div class="sb"><div class="sf" id="cb2" style="width:67%"></div></div></div>
+        <div class="si"><div class="sl">NEURAL NET <span id="nv">88%</span></div><div class="sb"><div class="sf" id="nb" style="width:88%;background:linear-gradient(90deg,var(--arc2),var(--gold))"></div></div></div>
+        <div class="si"><div class="sl">MEMORY <span id="mv">72%</span></div><div class="sb"><div class="sf" id="mb" style="width:72%"></div></div></div>
+      </div>
+      <div class="syslog">
+        <div>KERNEL &nbsp;<span class="ok">◉ STABLE</span></div>
+        <div>VOICE &nbsp;&nbsp;<span class="ok" id="voiceStat">◉ READY</span></div>
+        <div>CAMERA &nbsp;<span class="wd" id="cstat">◎ STANDBY</span></div>
+        <div>NETWORK <span class="ok">◉ SECURE</span></div>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="pnl chat-pnl">
+      <div class="ph">NEURAL DIALOGUE INTERFACE</div>
+      <div class="msgs" id="msgs">
+        <div class="msg j">
+          <div class="av">J</div>
+          <div>
+            <div class="bb">Good day, Sir. All systems are online and operational. You can chat with me, use voice commands, search the web, open YouTube, check weather, take notes, or use the calculator. How may I assist?</div>
+            <div class="mt" id="ft"></div>
+          </div>
+        </div>
+      </div>
+      <div class="typ" id="typ">
+        <div class="av" style="border-color:rgba(0,212,255,.35);color:var(--arc);">J</div>
+        <div class="bb" style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);">
+          <div style="display:flex;gap:4px;"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+        </div>
+      </div>
+      <div class="chin">
+        <button class="ib mic" id="micBtn" onclick="toggleVoice()" title="Hold to speak — click to toggle continuous listening">🎙</button>
+        <input id="ci" placeholder="TYPE A COMMAND OR QUESTION..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+        <button class="ib" onclick="sendMsg()" title="Send">➤</button>
+      </div>
+    </div>
+
+    <!-- Right: Cmds + Log -->
+    <div class="rp">
+      <div class="pnl">
+        <div class="ph">QUICK COMMANDS</div>
+        <div class="cg">
+          <button class="cb" onclick="qcmd('time')"><span class="ci2">⏱</span>TIME</button>
+          <button class="cb" onclick="qcmd('date')"><span class="ci2">📅</span>DATE</button>
+          <button class="cb" onclick="qcmd('joke')"><span class="ci2">😄</span>JOKE</button>
+          <button class="cb" onclick="qcmd('system status')"><span class="ci2">⚙</span>STATUS</button>
+          <button class="cb" onclick="openSite('https://www.youtube.com')"><span class="ci2">▶</span>YOUTUBE</button>
+          <button class="cb" onclick="goPage('search',document.querySelectorAll('.tab')[2])"><span class="ci2">🔍</span>SEARCH</button>
+          <button class="cb" onclick="goPage('calc',document.querySelectorAll('.tab')[3])"><span class="ci2">🔢</span>CALC</button>
+          <button class="cb" onclick="goPage('notes',document.querySelectorAll('.tab')[4])"><span class="ci2">◧</span>NOTES</button>
+          <button class="cb" onclick="goPage('weather',document.querySelectorAll('.tab')[5])"><span class="ci2">🌡</span>WEATHER</button>
+          <button class="cb" onclick="goPage('cam',document.querySelectorAll('.tab')[1])"><span class="ci2">📷</span>CAMERA</button>
+        </div>
+      </div>
+      <div class="pnl" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+        <div class="ph">ACTIVITY LOG</div>
+        <div class="alog" id="alog">
+          <div class="le ok2"><span class="lt" id="lt0"></span>JARVIS INITIALIZED</div>
+          <div class="le ok2"><span class="lt"></span>ALL SYSTEMS NOMINAL</div>
+          <div class="le info"><span class="lt"></span>AWAITING COMMANDS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CAMERA ══ -->
+  <div class="pg" id="pg-cam" style="flex-direction:column;padding:10px;gap:8px;">
+    <div class="cam-wrap">
+      <video id="camFeed" autoplay muted playsinline></video>
+      <div class="co">
+        <div class="scan"></div>
+        <div class="xh"></div>
+        <div class="ch tl" id="hREC">● REC</div>
+        <div class="ch tr">LIVE FEED</div>
+        <div class="ch bl" id="hFPS">FPS: --</div>
+        <div class="ch br">HD 1080</div>
+      </div>
+      <div class="nocam" id="nocam">
+        <div class="nocam-icon">📷</div>
+        <div>OPTICAL SENSOR OFFLINE</div>
+        <div style="font-size:9px;opacity:.45;letter-spacing:1px;margin-top:4px">CLICK ACTIVATE OPTICS TO ENABLE CAMERA</div>
+      </div>
+    </div>
+    <div class="cam-btns">
+      <button class="camb" id="camTog" onclick="toggleCam()">⬡ ACTIVATE OPTICS</button>
+      <button class="camb" id="snapBtn" onclick="snap()" disabled>◈ SNAPSHOT</button>
+      <button class="camb d" id="camOff" onclick="stopCam()" style="display:none">✕ DISENGAGE</button>
+    </div>
+  </div>
+
+  <!-- ══ SEARCH — opens in new tab ══ -->
+  <div class="pg" id="pg-search" style="flex-direction:column;padding:10px;gap:10px;">
+    <div class="s-top">
+      <input id="sinput" placeholder="TYPE TO SEARCH — OPENS IN NEW TAB..." onkeydown="if(event.key==='Enter')doSearch()"/>
+      <div class="stabs">
+        <button class="stab on"  id="stG"  onclick="setSE('google',this)">🌐 GOOGLE</button>
+        <button class="stab yt"  id="stY"  onclick="setSE('youtube',this)">▶ YOUTUBE</button>
+        <button class="stab"     id="stW"  onclick="setSE('wiki',this)">📖 WIKI</button>
+        <button class="stab"     id="stM"  onclick="setSE('maps',this)">🗺 MAPS</button>
+        <button class="stab"     id="stGH" onclick="setSE('github',this)">⚡ GITHUB</button>
+      </div>
+      <button class="sbtn" onclick="doSearch()">⊕ OPEN SEARCH</button>
+    </div>
+
+    <!-- Info bar -->
+    <div class="s-search-info pnl" style="padding:10px 14px;">
+      <span class="icon">🔗</span>
+      <span style="color:var(--arc)">All searches open in a new browser tab</span>
+      <span style="opacity:.4;margin:0 6px">|</span>
+      <span>Click any quick-link below or type a query and press OPEN SEARCH</span>
+    </div>
+
+    <!-- Quick links grid -->
+    <div class="s-grid" style="overflow-y:auto;">
+
+      <!-- YouTube -->
+      <div class="pnl s-cat">
+        <div class="s-cat-title" style="color:#ff5555;">▶ YOUTUBE</div>
+        <div class="s-links">
+          <button class="slink yt" onclick="openSite('https://www.youtube.com')">
+            <span class="slink-icon">▶</span>
+            <div class="slink-info"><div class="slink-name">YouTube Home</div><div class="slink-desc">Browse videos & trending</div></div>
+          </button>
+          <button class="slink yt" onclick="searchOn('youtube','jarvis ai python tutorial')">
+            <span class="slink-icon">🤖</span>
+            <div class="slink-info"><div class="slink-name">JARVIS Tutorials</div><div class="slink-desc">AI & voice assistant projects</div></div>
+          </button>
+          <button class="slink yt" onclick="searchOn('youtube','python projects 2025')">
+            <span class="slink-icon">🐍</span>
+            <div class="slink-info"><div class="slink-name">Python Projects</div><div class="slink-desc">Latest coding tutorials</div></div>
+          </button>
+          <button class="slink yt" onclick="openSite('https://www.youtube.com/feed/trending')">
+            <span class="slink-icon">🔥</span>
+            <div class="slink-info"><div class="slink-name">Trending Now</div><div class="slink-desc">What's hot today</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Web Search -->
+      <div class="pnl s-cat">
+        <div class="s-cat-title">🌐 WEB SEARCH</div>
+        <div class="s-links">
+          <button class="slink" onclick="openSite('https://www.google.com')">
+            <span class="slink-icon">🌐</span>
+            <div class="slink-info"><div class="slink-name">Google</div><div class="slink-desc">Web search engine</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://en.wikipedia.org')">
+            <span class="slink-icon">📖</span>
+            <div class="slink-info"><div class="slink-name">Wikipedia</div><div class="slink-desc">Free encyclopedia</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://www.google.com/maps')">
+            <span class="slink-icon">🗺</span>
+            <div class="slink-info"><div class="slink-name">Google Maps</div><div class="slink-desc">Navigation & locations</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://news.google.com')">
+            <span class="slink-icon">📰</span>
+            <div class="slink-info"><div class="slink-name">Google News</div><div class="slink-desc">Latest headlines</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dev Tools -->
+      <div class="pnl s-cat">
+        <div class="s-cat-title">⚡ DEVELOPER</div>
+        <div class="s-links">
+          <button class="slink" onclick="openSite('https://github.com')">
+            <span class="slink-icon">⚡</span>
+            <div class="slink-info"><div class="slink-name">GitHub</div><div class="slink-desc">Code repositories</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://stackoverflow.com')">
+            <span class="slink-icon">💻</span>
+            <div class="slink-info"><div class="slink-name">Stack Overflow</div><div class="slink-desc">Developer Q&A</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://www.google.com/search?q=python+documentation')">
+            <span class="slink-icon">🐍</span>
+            <div class="slink-info"><div class="slink-name">Python Docs</div><div class="slink-desc">Official documentation</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://colab.research.google.com')">
+            <span class="slink-icon">☁</span>
+            <div class="slink-info"><div class="slink-name">Google Colab</div><div class="slink-desc">Cloud Python notebooks</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI & Tools -->
+      <div class="pnl s-cat">
+        <div class="s-cat-title" style="color:var(--gold);">◈ AI & TOOLS</div>
+        <div class="s-links">
+          <button class="slink" onclick="openSite('https://chat.openai.com')">
+            <span class="slink-icon">🤖</span>
+            <div class="slink-info"><div class="slink-name">ChatGPT</div><div class="slink-desc">OpenAI AI assistant</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://huggingface.co')">
+            <span class="slink-icon">🤗</span>
+            <div class="slink-info"><div class="slink-name">HuggingFace</div><div class="slink-desc">AI models & datasets</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://kaggle.com')">
+            <span class="slink-icon">📊</span>
+            <div class="slink-info"><div class="slink-name">Kaggle</div><div class="slink-desc">ML competitions & data</div></div>
+          </button>
+          <button class="slink" onclick="openSite('https://www.wolframalpha.com')">
+            <span class="slink-icon">∑</span>
+            <div class="slink-info"><div class="slink-name">Wolfram Alpha</div><div class="slink-desc">Computational answers</div></div>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ CALCULATOR ══ -->
+  <div class="pg" id="pg-calc" style="justify-content:center;align-items:center;padding:16px;gap:16px;">
+    <div class="calc">
+      <div class="cd">
+        <div class="cexpr" id="ce">&nbsp;</div>
+        <div class="cval" id="cv2">0</div>
+      </div>
+      <div class="ck-g">
+        <button class="ck cl w2" onclick="calcAC()">AC</button>
+        <button class="ck op"    onclick="calcK('%')">%</button>
+        <button class="ck op"    onclick="calcK('/')">÷</button>
+        <button class="ck"       onclick="calcK('7')">7</button>
+        <button class="ck"       onclick="calcK('8')">8</button>
+        <button class="ck"       onclick="calcK('9')">9</button>
+        <button class="ck op"    onclick="calcK('*')">×</button>
+        <button class="ck"       onclick="calcK('4')">4</button>
+        <button class="ck"       onclick="calcK('5')">5</button>
+        <button class="ck"       onclick="calcK('6')">6</button>
+        <button class="ck op"    onclick="calcK('-')">−</button>
+        <button class="ck"       onclick="calcK('1')">1</button>
+        <button class="ck"       onclick="calcK('2')">2</button>
+        <button class="ck"       onclick="calcK('3')">3</button>
+        <button class="ck op"    onclick="calcK('+')">+</button>
+        <button class="ck w2"    onclick="calcK('0')">0</button>
+        <button class="ck"       onclick="calcK('.')">.</button>
+        <button class="ck cl"    onclick="calcDel()">⌫</button>
+        <button class="ck eq"    onclick="calcEq()">=</button>
+      </div>
+    </div>
+    <div class="pnl c-hist">
+      <div class="ph">HISTORY</div>
+      <div class="chl" id="chl">
+        <div style="font-size:10px;color:var(--arc2);padding:8px;opacity:.6">No calculations yet, Sir.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ NOTES ══ -->
+  <div class="pg" id="pg-notes">
+    <div class="pnl nl-p">
+      <div class="ph">INTEL FILES</div>
+      <div class="nlist" id="nlist"></div>
+      <div style="padding:7px;flex-shrink:0;">
+        <button class="nb" style="width:100%;text-align:center" onclick="newNote()">+ NEW FILE</button>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;padding-left:10px;min-height:0;gap:0;">
+      <div class="pnl ne">
+        <div class="ph">EDITOR</div>
+        <input id="ntitle" placeholder="FILE TITLE..." oninput="autoSave()"/>
+        <textarea id="nbody" placeholder="TYPE YOUR NOTES HERE, SIR..." oninput="autoSave()"></textarea>
+      </div>
+      <div class="nbtns">
+        <button class="nb" onclick="saveNote()">💾 SAVE FILE</button>
+        <button class="nb d" onclick="deleteNote()">✕ DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ WEATHER ══ -->
+  <div class="pg" id="pg-weather" style="flex-direction:column;padding:10px;gap:10px;">
+    <div class="ws">
+      <input id="winput" placeholder="ENTER CITY NAME (e.g. London, Tokyo, New York)..." onkeydown="if(event.key==='Enter')fetchW()"/>
+      <button class="wb" onclick="fetchW()">⊕ SCAN WEATHER</button>
+    </div>
+    <div id="wcon" class="wph">
+      <div style="font-size:48px;opacity:.1">🌡</div>
+      <div>METEOROLOGICAL SENSOR READY</div>
+      <div style="font-size:9px;opacity:.4;letter-spacing:2px;margin-top:4px">ENTER A CITY NAME ABOVE AND PRESS SCAN</div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="sbar">
+    <div class="wave">
+      <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+      <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+    </div>
+    <span id="vst">VOICE: STANDBY</span>
+    <span class="s-sep">|</span>
+    <span>NETWORK: SECURE</span>
+    <span class="s-sep">|</span>
+    <span id="qct">QUERIES: 0</span>
+    <span class="s-sep">|</span>
+    <span id="dbar"></span>
+    <button class="pwr" onclick="shutdown()">⏻ SHUTDOWN</button>
+  </div>
+
+</div><!-- /root -->
+
+<script>
+// ════════════════════════════════════════
+//  J.A.R.V.I.S  ENGINE  v5.0
+// ════════════════════════════════════════
+let camStream=null, qCount=0;
+let recog=null, voiceEnabled=false, voiceRestarting=false, voiceRestartTimer=null, isSpeaking=false;
+let cCur='0', cHist=[];
+let notes=[], activeNote=null, asTimer=null;
+let se='google';
+
+// ── Load notes from localStorage ──
+try{ notes=JSON.parse(localStorage.getItem('jnotes')||'[]'); }catch(e){ notes=[]; }
+
+const BOOT=['INITIALIZING CORE SYSTEMS...','LOADING NEURAL NETWORKS...',
+  'CALIBRATING VOICE ENGINE...','MOUNTING OPTICAL ARRAYS...',
+  'RUNNING SELF-DIAGNOSTICS...','SECURING NETWORK UPLINK...','ALL SYSTEMS NOMINAL','WELCOME, SIR.'];
+
+window.addEventListener('load',()=>{
+  document.getElementById('ft').textContent = gt();
+  document.getElementById('lt0').textContent = gt()+' ';
+  document.getElementById('dbar').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  tick(); setInterval(tick,1000);
+  animSt(); setInterval(animSt,5000);
+  renderNotes();
+  boot();
+});
+
+function boot(){
+  const bar=document.getElementById('bpf'), txt=document.getElementById('btx');
+  let i=0;
+  const step=()=>{
+    txt.textContent=BOOT[i];
+    bar.style.width=((i+1)/BOOT.length*100)+'%';
+    i++;
+    if(i<BOOT.length) setTimeout(step, 280+Math.random()*180);
+    else{
+      setTimeout(()=>{
+        const b=document.getElementById('boot');
+        b.style.transition='opacity .7s'; b.style.opacity='0';
+        setTimeout(()=>{ b.style.display='none'; speak('Good day Sir. JARVIS online. All systems operational.'); },700);
+      },500);
+    }
+  };
+  setTimeout(step,400);
+}
+
+// ── CLOCK ──
+function gt(){ return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}); }
+function tick(){ document.getElementById('clk').textContent=gt(); }
+
+// ── PAGE NAV ──
+function goPage(id,btn){
+  document.querySelectorAll('.pg').forEach(p=>{ p.style.display='none'; p.classList.remove('on'); });
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const pg=document.getElementById('pg-'+id);
+  pg.style.display='flex'; pg.classList.add('on');
+  if(btn) btn.classList.add('on');
+  addLog('NAVIGATED TO: '+id.toUpperCase(),'info');
+}
+
+// ── STAT ANIMATION ──
+function animSt(){
+  [[88,99,'pv','pb'],[44,82,'cv','cb2'],[80,96,'nv','nb'],[60,80,'mv','mb']].forEach(([mn,mx,vi,bi])=>{
+    const v=Math.round(mn+Math.random()*(mx-mn));
+    document.getElementById(vi).textContent=v+'%';
+    document.getElementById(bi).style.width=v+'%';
+  });
+}
+
+// ── VOICE SYNTH ──
+function speak(t){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);
+  u.rate=0.9; u.pitch=0.82; u.volume=0.95;
+  const vs=speechSynthesis.getVoices();
+  const pref=vs.find(v=>v.name.toLowerCase().includes('daniel')||v.name.toLowerCase().includes('alex')||(v.lang==='en-GB'&&v.localService));
+  if(pref) u.voice=pref;
+  u.onstart=()=>{
+    isSpeaking=true;
+    if(voiceEnabled && recog){ try{ recog.stop(); }catch(e){} }
+  };
+  u.onend=u.onerror=()=>{
+    isSpeaking=false;
+    if(voiceEnabled){
+      voiceRestarting=false;
+      clearTimeout(voiceRestartTimer);
+      voiceRestartTimer=setTimeout(()=>{ if(voiceEnabled) startVoice(); }, 700);
+    }
+  };
+  speechSynthesis.speak(u);
+}
+document.addEventListener('click',()=>speechSynthesis.getVoices(),{once:true});
+
+// ── CONTINUOUS VOICE RECOGNITION ──
+function toggleVoice(){
+  if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)){
+    toast('Voice recognition not supported. Please use Chrome or Edge.'); return;
+  }
+  if(voiceEnabled){ stopVoice(); return; }
+  startVoice();
+}
+
+function startVoice(){
+  if(voiceRestarting || isSpeaking) return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR();
+  recog.lang='en-US';
+  recog.continuous=true;       // keep mic open forever
+  recog.interimResults=false;
+  recog.maxAlternatives=1;
+
+  recog.onstart=()=>{
+    voiceEnabled=true; voiceRestarting=false;
+    document.getElementById('micBtn').classList.add('on');
+    document.getElementById('micBtn').textContent='🔴';
+    document.getElementById('vst').textContent='VOICE: LISTENING';
+    document.getElementById('voiceStat').textContent='◉ ACTIVE';
+    document.getElementById('voiceStat').className='ok';
+    document.querySelectorAll('.wv').forEach(b=>b.classList.add('on'));
+    addLog('CONTINUOUS VOICE ACTIVATED','ok2');
+    toast('Voice listening — speak anytime, Sir.',2000);
+  };
+
+  recog.onresult=e=>{
+    const last=e.results[e.results.length-1];
+    if(last.isFinal){
+      const t=last[0].transcript.trim();
+      if(t){ document.getElementById('ci').value=t; sendMsg(); }
+    }
+  };
+
+  recog.onerror=e=>{
+    if(e.error==='no-speech' || e.error==='audio-capture') return; // ignore silence
+    if(e.error==='not-allowed'){
+      toast('Microphone permission denied. Check browser settings.');
+      stopVoice(); return;
+    }
+    addLog('VOICE ERROR: '+e.error,'warn');
+  };
+
+  recog.onend=()=>{
+    // Auto-restart unless user stopped
+    if(voiceEnabled && !voiceRestarting && !isSpeaking){
+      voiceRestarting=true;
+      voiceRestartTimer=setTimeout(()=>{
+        voiceRestarting=false;
+        if(voiceEnabled) startVoice();
+      }, 350);
+    }
+  };
+
+  try{ recog.start(); }
+  catch(err){ addLog('VOICE START FAILED: '+err.message,'err'); }
+}
+
+function stopVoice(){
+  voiceEnabled=false; voiceRestarting=false;
+  clearTimeout(voiceRestartTimer);
+  try{ if(recog) recog.stop(); }catch(e){}
+  document.getElementById('micBtn').classList.remove('on');
+  document.getElementById('micBtn').textContent='🎙';
+  document.getElementById('vst').textContent='VOICE: STANDBY';
+  document.getElementById('voiceStat').textContent='◉ READY';
+  document.getElementById('voiceStat').className='ok';
+  document.querySelectorAll('.wv').forEach(b=>b.classList.remove('on'));
+  addLog('VOICE DEACTIVATED','warn');
+}
+
+// ── CHAT RESPONSES ──
+const R={
+  greet:["Good day, Sir. How may I assist?","Hello, Sir. Systems at your disposal.","JARVIS online. What do you need?"],
+  thanks:["At your service, Sir.","Always a pleasure.","Of course, Sir."],
+  bye:["Farewell, Sir. Entering standby.","Goodbye. JARVIS standing by."],
+  joke:["Why do programmers prefer dark mode? Because light attracts bugs, Sir.",
+    "I tried to explain my intelligence. I ran out of memory.",
+    "They said AI cannot be creative. I disagreed and wrote a symphony.",
+    "My calculations are 99.9% accurate. The 0.1% is reserved for your surprises, Sir."],
+  system:()=>`Power ${document.getElementById('pv').textContent}, CPU ${document.getElementById('cv').textContent}, Neural Net ${document.getElementById('nv').textContent}. All systems nominal, Sir.`,
+  help:"You can: ask me anything, say 'open youtube', 'open google', 'weather in london', 'what time is it', 'tell me a joke', 'open camera', 'open notes', 'open calculator'. Voice commands also work, Sir.",
+  default:["Processing your request, Sir.","Analyzing through neural networks.","Accessing data matrices. Stand by, Sir.","Acknowledged. Running analysis now."]
+};
+function rnd(a){ return Array.isArray(a)?a[Math.floor(Math.random()*a.length)]:typeof a==='function'?a():a; }
+
+function getResp(m){
+  const s=m.toLowerCase();
+  if(/\b(hi|hello|hey|good\s(morning|afternoon|evening))\b/.test(s)) return rnd(R.greet);
+  if(/\b(thank|thanks|thx)\b/.test(s)) return rnd(R.thanks);
+  if(/\b(bye|goodbye|cya)\b/.test(s)) return rnd(R.bye);
+  if(/\b(joke|funny|laugh|humor)\b/.test(s)) return rnd(R.joke);
+  if(/\b(time|clock|what time)\b/.test(s)) return 'The current time is '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+', Sir.';
+  if(/\b(date|day|today|what day)\b/.test(s)) return 'Today is '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+', Sir.';
+  if(/\b(system|status|cpu|power|memory|diagnostic)\b/.test(s)) return R.system();
+  if(/\b(help|commands|what can|how do)\b/.test(s)) return R.help;
+  if(/\b(who are you|what are you|your name|identity)\b/.test(s)) return "I am J.A.R.V.I.S — Just A Rather Very Intelligent System, Sir. Your personal AI assistant.";
+  if(/\b(who made|who built|who created|creator|developer)\b/.test(s)) return "I was built by a talented developer, Sir. A true genius, I might add.";
+  // Navigation by voice
+  if(/\b(open youtube|go to youtube|youtube)\b/.test(s)){ openSite('https://www.youtube.com'); return "Opening YouTube in a new tab, Sir."; }
+  if(/\b(open google|go to google)\b/.test(s)){ openSite('https://www.google.com'); return "Opening Google, Sir."; }
+  if(/\b(open github|go to github)\b/.test(s)){ openSite('https://github.com'); return "Opening GitHub, Sir."; }
+  if(/\b(search|find|look up|google)\b/.test(s)){
+    const q=m.replace(/search|find|look up|google|for|me/gi,'').trim();
+    if(q.length>2){ searchOn('google',q); return`Searching Google for "${q}", Sir.`; }
+    goPage('search',document.querySelectorAll('.tab')[2]); return "Opening search interface, Sir.";
+  }
+  if(/\b(youtube search|search youtube|find video)\b/.test(s)){
+    const q=m.replace(/youtube search|search youtube|find video|on youtube/gi,'').trim();
+    if(q.length>2){ searchOn('youtube',q); return`Searching YouTube for "${q}", Sir.`; }
+  }
+  if(/\b(calculator|calc|calculate|math)\b/.test(s)){ goPage('calc',document.querySelectorAll('.tab')[3]); return "Opening calculator, Sir."; }
+  if(/\b(notes|note|notepad)\b/.test(s)){ goPage('notes',document.querySelectorAll('.tab')[4]); return "Opening notes, Sir."; }
+  if(/\b(weather|temperature|forecast|climate)\b/.test(s)){
+    const city=m.replace(/weather|temperature|forecast|in|at|climate|for/gi,'').trim();
+    goPage('weather',document.querySelectorAll('.tab')[5]);
+    if(city.length>2){ document.getElementById('winput').value=city; setTimeout(fetchW,300); return`Checking weather in ${city}, Sir.`; }
+    return "Opening weather scanner, Sir.";
+  }
+  if(/\b(camera|optic|optical|vision|video)\b/.test(s)){ goPage('cam',document.querySelectorAll('.tab')[1]); return "Opening camera interface, Sir."; }
+  // Math eval
+  const mm=m.match(/[\d\s\+\-\*\/\^\(\)\.]+/);
+  if(mm && mm[0].trim().length>2){
+    try{
+      const r=Function('"use strict";return ('+mm[0]+')')();
+      if(!isNaN(r) && isFinite(r)) return 'The result is '+r+', Sir.';
+    }catch(e){}
+  }
+  return rnd(R.default);
+}
+
+function addMsg(text,role){
+  const c=document.getElementById('msgs');
+  const d=document.createElement('div'); d.className='msg '+(role==='jarvis'?'j':'u');
+  d.innerHTML=`<div class="av">${role==='jarvis'?'J':'U'}</div><div><div class="bb">${text}</div><div class="mt">${gt()}</div></div>`;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function sendMsg(){
+  const inp=document.getElementById('ci');
+  const msg=inp.value.trim(); if(!msg) return;
+  inp.value=''; qCount++;
+  document.getElementById('qct').textContent='QUERIES: '+qCount;
+  addMsg(msg,'user');
+  addLog('INPUT: '+msg.substring(0,28)+(msg.length>28?'...':''),'info');
+  const ty=document.getElementById('typ'); ty.classList.add('on');
+  document.getElementById('msgs').scrollTop=99999;
+  setTimeout(()=>{
+    ty.classList.remove('on');
+    const resp=getResp(msg);
+    addMsg(resp,'jarvis');
+    speak(resp);
+    addLog('RESPONSE DELIVERED','ok2');
+  }, 600+Math.random()*400);
+}
+function qcmd(c){ document.getElementById('ci').value=c; sendMsg(); }
+
+// ── LOG ──
+function addLog(msg,type='info'){
+  const l=document.getElementById('alog');
+  const e=document.createElement('div'); e.className='le '+type;
+  e.innerHTML=`<span class="lt">${gt()} </span>${msg}`;
+  l.appendChild(e); l.scrollTop=l.scrollHeight;
+  while(l.children.length>80) l.removeChild(l.firstChild);
+}
+
+// ── TOAST ──
+function toast(msg,d=2600){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('on'); clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('on'),d);
+}
+
+// ── CAMERA ──
+async function toggleCam(){
+  if(camStream){ stopCam(); return; }
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720},audio:false});
+    const v=document.getElementById('camFeed');
+    v.srcObject=camStream; v.style.display='block';
+    document.getElementById('nocam').style.display='none';
+    document.getElementById('camTog').textContent='⬡ OPTICS ACTIVE';
+    document.getElementById('camTog').classList.add('on');
+    document.getElementById('snapBtn').disabled=false;
+    document.getElementById('camOff').style.display='';
+    document.getElementById('cstat').textContent='◉ ACTIVE';
+    document.getElementById('cstat').className='ok';
+    setInterval(()=>{ if(camStream) document.getElementById('hFPS').textContent='FPS: '+(28+Math.floor(Math.random()*4)); },1000);
+    addLog('OPTICAL SENSOR ACTIVATED','ok2'); toast('Camera online, Sir.'); speak("Optical sensors activated, Sir.");
+  }catch(err){
+    addLog('CAMERA ACCESS DENIED: '+err.message,'err');
+    toast('Camera access denied. Check browser permissions.');
+  }
+}
+function stopCam(){
+  if(!camStream) return;
+  camStream.getTracks().forEach(t=>t.stop()); camStream=null;
+  const v=document.getElementById('camFeed'); v.srcObject=null; v.style.display='none';
+  document.getElementById('nocam').style.display='';
+  document.getElementById('camTog').textContent='⬡ ACTIVATE OPTICS';
+  document.getElementById('camTog').classList.remove('on');
+  document.getElementById('snapBtn').disabled=true;
+  document.getElementById('camOff').style.display='none';
+  document.getElementById('cstat').textContent='◎ STANDBY';
+  document.getElementById('cstat').className='wd';
+  addLog('OPTICAL SENSOR DISENGAGED','warn');
+}
+function snap(){
+  const v=document.getElementById('camFeed');
+  if(!camStream||v.readyState<2){ toast('Camera not ready, Sir.'); return; }
+  const c=document.createElement('canvas'); c.width=v.videoWidth||1280; c.height=v.videoHeight||720;
+  const ctx=c.getContext('2d');
+  ctx.translate(c.width,0); ctx.scale(-1,1); ctx.drawImage(v,0,0); ctx.setTransform(1,0,0,1,0,0);
+  // HUD overlay
+  ctx.strokeStyle='rgba(0,212,255,.85)'; ctx.lineWidth=2;
+  [[14,14],[c.width-14,14],[14,c.height-14],[c.width-14,c.height-14]].forEach(([x,y],i)=>{
+    ctx.beginPath(); const sx=i%2===0?1:-1, sy=i<2?1:-1;
+    ctx.moveTo(x,y); ctx.lineTo(x+sx*24,y); ctx.moveTo(x,y); ctx.lineTo(x,y+sy*24); ctx.stroke();
+  });
+  ctx.fillStyle='rgba(0,212,255,.9)'; ctx.font='bold 13px monospace';
+  ctx.fillText('J.A.R.V.I.S  ◈  '+new Date().toLocaleString(),14,c.height-12);
+  const a=document.createElement('a'); a.href=c.toDataURL('image/png'); a.download='JARVIS_'+Date.now()+'.png'; a.click();
+  addLog('SNAPSHOT CAPTURED & SAVED','ok2'); toast('Snapshot saved, Sir.'); speak("Image captured and saved, Sir.");
+}
+
+// ── SEARCH — ALL OPEN IN NEW TAB ──
+const ENGINES={
+  google:  'https://www.google.com/search?q=',
+  youtube: 'https://www.youtube.com/results?search_query=',
+  wiki:    'https://en.wikipedia.org/wiki/Special:Search?search=',
+  maps:    'https://www.google.com/maps/search/',
+  github:  'https://github.com/search?q='
+};
+
+function setSE(type,btn){
+  se=type;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  addLog('SEARCH ENGINE: '+type.toUpperCase(),'info');
+}
+
+function doSearch(){
+  const q=document.getElementById('sinput').value.trim();
+  if(!q){ toast('Please enter a search query, Sir.'); return; }
+  const url=ENGINES[se]+encodeURIComponent(q);
+  openSite(url);
+  addLog('SEARCH ['+se.toUpperCase()+']: '+q.substring(0,24),'ok2');
+  speak("Searching "+se+" for "+q+", Sir.");
+}
+
+function searchOn(engine,query){
+  openSite(ENGINES[engine]+encodeURIComponent(query));
+  addLog('AUTO-SEARCH ['+engine.toUpperCase()+']: '+query.substring(0,20),'ok2');
+}
+
+// THE FIX: always use window.open to new tab — iframes get blocked
+function openSite(url){
+  window.open(url,'_blank','noopener,noreferrer');
+  addLog('OPENING: '+url.substring(0,40),'info');
+  toast('Opened in new tab, Sir.');
+}
+
+// ── CALCULATOR ──
+function calcK(k){
+  if(cCur==='Error') cCur='';
+  if(cCur==='0' && !'/*+-.'.includes(k)) cCur='';
+  cCur+=k;
+  document.getElementById('cv2').textContent=cCur;
+}
+function calcAC(){ cCur='0'; document.getElementById('cv2').textContent='0'; document.getElementById('ce').innerHTML='&nbsp;'; }
+function calcDel(){ cCur=cCur.length>1?cCur.slice(0,-1):'0'; document.getElementById('cv2').textContent=cCur; }
+function calcEq(){
+  try{
+    const ex=cCur.replace(/×/g,'*').replace(/÷/g,'/');
+    document.getElementById('ce').textContent=ex+' =';
+    const raw=Function('"use strict";return ('+ex+')')();
+    const res=parseFloat(raw.toFixed(10)).toString();
+    cHist.unshift(ex+' = '+res);
+    if(cHist.length>25) cHist.pop();
+    renderCH();
+    cCur=res; document.getElementById('cv2').textContent=res;
+  }catch(e){ cCur='Error'; document.getElementById('cv2').textContent='Error'; }
+}
+function renderCH(){
+  const l=document.getElementById('chl');
+  if(!cHist.length){ l.innerHTML='<div style="font-size:10px;color:var(--arc2);padding:8px;opacity:.6">No calculations yet, Sir.</div>'; return; }
+  l.innerHTML=cHist.map(h=>`<div class="chi" onclick="useH(this)">${h}</div>`).join('');
+}
+function useH(el){
+  const p=el.textContent.split('=');
+  if(p.length>1){ cCur=p[p.length-1].trim(); document.getElementById('cv2').textContent=cCur; }
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('pg-calc').classList.contains('on')) return;
+  if('0123456789'.includes(e.key)) calcK(e.key);
+  else if(['+','-','*','/','%'].includes(e.key)) calcK(e.key);
+  else if(e.key==='.') calcK('.');
+  else if(e.key==='Enter'||e.key==='=') calcEq();
+  else if(e.key==='Backspace') calcDel();
+  else if(e.key==='Escape') calcAC();
+});
+
+// ── NOTES ──
+function renderNotes(){
+  const l=document.getElementById('nlist');
+  if(!notes.length){
+    l.innerHTML='<div style="font-size:10px;color:var(--arc2);padding:12px;opacity:.5;font-family:Orbitron,sans-serif;letter-spacing:1px;">NO FILES. CLICK + NEW FILE.</div>'; return;
+  }
+  l.innerHTML=notes.map((n,i)=>`
+    <div class="ni${activeNote===i?' on':''}" onclick="openNote(${i})">
+      <div class="ni-t">${n.title||'Untitled'}</div>
+      <div class="ni-p">${(n.body||'').substring(0,40)||'...'}</div>
+    </div>`).join('');
+}
+function newNote(){
+  notes.unshift({title:'',body:'',ts:Date.now()});
+  activeNote=0; saveLS(); renderNotes();
+  document.getElementById('ntitle').value='';
+  document.getElementById('nbody').value='';
+  document.getElementById('ntitle').focus();
+  addLog('NEW NOTE CREATED','ok2');
+}
+function openNote(i){
+  activeNote=i;
+  document.getElementById('ntitle').value=notes[i].title;
+  document.getElementById('nbody').value=notes[i].body;
+  renderNotes();
+}
+function autoSave(){ clearTimeout(asTimer); asTimer=setTimeout(saveNote,800); }
+function saveNote(){
+  if(activeNote===null) return;
+  notes[activeNote].title=document.getElementById('ntitle').value;
+  notes[activeNote].body=document.getElementById('nbody').value;
+  notes[activeNote].ts=Date.now();
+  saveLS(); renderNotes(); addLog('NOTE AUTO-SAVED','ok2');
+}
+function deleteNote(){
+  if(activeNote===null||!confirm('Delete this note, Sir?')) return;
+  notes.splice(activeNote,1); activeNote=null;
+  document.getElementById('ntitle').value='';
+  document.getElementById('nbody').value='';
+  saveLS(); renderNotes(); addLog('NOTE DELETED','warn');
+}
+function saveLS(){ try{ localStorage.setItem('jnotes',JSON.stringify(notes)); }catch(e){} }
+
+// ── WEATHER ──
+async function fetchW(){
+  const city=document.getElementById('winput').value.trim();
+  if(!city){ toast('Please enter a city name, Sir.'); return; }
+  const wc=document.getElementById('wcon');
+  wc.className='wph'; wc.innerHTML=`<div style="font-size:11px;font-family:Orbitron,sans-serif;letter-spacing:3px;color:var(--arc2);animation:dp 1s ease-in-out infinite">SCANNING METEOROLOGICAL DATA...</div>`;
+  try{
+    const res=await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+    if(!res.ok) throw new Error('City not found');
+    const d=await res.json();
+    const cur=d.current_condition[0];
+    const area=d.nearest_area[0];
+    const name=area.areaName[0].value, country=area.country[0].value;
+    const temp=cur.temp_C, feels=cur.FeelsLikeC, desc=cur.weatherDesc[0].value;
+    const hum=cur.humidity, wind=cur.windspeedKmph, vis=cur.visibility, uv=cur.uvIndex||'N/A';
+    const ICONS={'Sunny':'☀️','Clear':'🌙','Partly cloudy':'⛅','Cloudy':'☁️','Overcast':'🌥️',
+      'Mist':'🌫️','Fog':'🌫️','Light rain':'🌦️','Rain':'🌧️','Heavy rain':'🌧️','Drizzle':'🌦️',
+      'Snow':'❄️','Blizzard':'🌨️','Thunder':'⛈️','Sleet':'🌨️'};
+    const ic=Object.keys(ICONS).find(k=>desc.toLowerCase().includes(k.toLowerCase()))||'🌡';
+    wc.className='wcard';
+    wc.innerHTML=`
+      <div class="wm">
+        <div class="wbig pnl">
+          <div class="w-icon">${ic}</div>
+          <div class="winfo">
+            <div class="wcity">${name.toUpperCase()}, ${country.toUpperCase()}</div>
+            <div class="wtemp">${temp}°C</div>
+            <div class="wdesc">${desc}</div>
+          </div>
+        </div>
+        <div class="wdet">
+          <div class="pnl wdi"><div class="wdl">FEELS LIKE</div><div class="wdv">${feels}°C</div></div>
+          <div class="pnl wdi"><div class="wdl">HUMIDITY</div><div class="wdv">${hum}%</div></div>
+          <div class="pnl wdi"><div class="wdl">WIND SPEED</div><div class="wdv">${wind} km/h</div></div>
+          <div class="pnl wdi"><div class="wdl">VISIBILITY</div><div class="wdv">${vis} km</div></div>
+        </div>
+      </div>`;
+    addLog('WEATHER: '+name+' '+temp+'°C '+desc,'ok2');
+    speak(`Weather in ${name}: ${temp} degrees Celsius. ${desc}. Humidity at ${hum} percent. Wind speed ${wind} kilometres per hour.`);
+  }catch(err){
+    wc.className='wph';
+    wc.innerHTML='<div style="font-size:40px;opacity:.15">⚠</div><div>CITY NOT FOUND</div><div style="font-size:9px;opacity:.4;margin-top:6px">CHECK SPELLING AND TRY AGAIN, SIR</div>';
+    addLog('WEATHER FETCH FAILED: '+err.message,'err');
+    toast('City not found. Try: London, Tokyo, New York');
+  }
+}
+
+// ── SHUTDOWN ──
+function shutdown(){
+  if(!confirm('JARVIS SHUTDOWN\n\nShut down all systems, Sir?')) return;
+  speak("Initiating shutdown sequence. Goodbye, Sir.");
+  stopCam(); stopVoice();
+  addLog('SHUTDOWN INITIATED','err');
+  setTimeout(()=>{
+    document.getElementById('root').style.transition='opacity 2.5s';
+    document.getElementById('root').style.opacity='0';
+  },1500);
+}
+</script>
+</body>
+</html>
